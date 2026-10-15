@@ -1,6 +1,6 @@
 # Sayso brand assets
 
-The mark is a text cursor with three voice-level bars beside it: speech arrives where the cursor is. Colours: tile `#1b1d22`, ink `#f2efe8`. Wordmark: Bahnschrift SemiBold, "Sayso" with a capital S.
+The mark is a text cursor with three voice-level bars beside it: speech arrives where the cursor is. Colours: tile `#1b1d22`, ink `#f2efe8` for the cursor, amber `#e8a33d` for the three voice bars (`#b7791f` on the light tile, so the bars keep 3:1 against it). Wordmark: Bahnschrift SemiBold, "Sayso" with a capital S.
 
 | File | Use |
 |---|---|
