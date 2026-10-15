@@ -1,9 +1,9 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "NVG Voice",
-  "mainBinaryName": "nvg-voice",
+  "productName": "Sayso",
+  "mainBinaryName": "sayso",
   "version": "0.1.0",
-  "identifier": "com.nvg.voice",
+  "identifier": "com.nexusvantagegroup.sayso",
   "build": {
     "frontendDist": "../ui/dist"
   },

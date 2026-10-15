@@ -318,7 +318,7 @@ pub async fn open_settings(app: AppHandle) -> Result<(), String> {
         return Ok(());
     }
     WebviewWindowBuilder::new(&app, "settings", WebviewUrl::App("settings.html".into()))
-        .title("NVG Voice Settings")
+        .title("Sayso Settings")
         .inner_size(520.0, 600.0)
         .min_inner_size(400.0, 440.0)
         .build().map_err(|e| e.to_string())?;
@@ -342,7 +342,7 @@ pub fn open_log_folder() -> Result<(), String> {
 pub fn quit_app(app: AppHandle) { app.exit(0); }
 
 const RUN_KEY: &str = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
-const APP_NAME: &str = "NVGVoice";
+const APP_NAME: &str = "Sayso";
 
 fn wide(s: &str) -> Vec<u16> { s.encode_utf16().chain(std::iter::once(0)).collect() }
 

@@ -1,4 +1,4 @@
-//! Size-rotating log at `%LOCALAPPDATA%\NVGVoice\logs\nvg-voice.log`.
+//! Size-rotating log at `%LOCALAPPDATA%\Sayso\logs\sayso.log`.
 //!
 //! Deliberately tiny: one global mutex serialises writes so lines from the
 //! hotkey, audio, coordination and Tauri threads never interleave. Rotation is
@@ -16,7 +16,7 @@ static LOG_LOCK: Mutex<()> = Mutex::new(());
 
 pub fn log_path() -> PathBuf {
     let base = std::env::var("LOCALAPPDATA").unwrap_or_else(|_| ".".into());
-    PathBuf::from(base).join("NVGVoice").join("logs").join("nvg-voice.log")
+    PathBuf::from(base).join("Sayso").join("logs").join("sayso.log")
 }
 
 fn write_line(level: &str, msg: &str) {

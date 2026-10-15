@@ -1,9 +1,9 @@
-//! Persistent state shared with the Python app:
-//! * `%APPDATA%\NVGVoice\config.json` — read/write with unknown fields preserved.
-//! * `%APPDATA%\NVGVoice\xai_key.enc` — DPAPI-encrypted xAI key.
-//! * `%LOCALAPPDATA%\NVGVoice\history.jsonl` — append-only dictation history.
+//! Persistent state, including data moved from earlier releases:
+//! * `%APPDATA%\Sayso\config.json` - read/write with unknown fields preserved.
+//! * `%APPDATA%\Sayso\xai_key.enc` - DPAPI-encrypted xAI key.
+//! * `%LOCALAPPDATA%\Sayso\history.jsonl` - append-only dictation history.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use serde_json::{Map, Value};
@@ -16,12 +16,121 @@ pub const DEFAULT_VAD_THRESHOLD: f32 = 0.3;
 
 pub fn config_dir() -> PathBuf {
     let base = std::env::var("APPDATA").unwrap_or_else(|_| ".".into());
-    PathBuf::from(base).join("NVGVoice")
+    PathBuf::from(base).join("Sayso")
 }
 
 pub fn data_dir() -> PathBuf {
     let base = std::env::var("LOCALAPPDATA").unwrap_or_else(|_| ".".into());
-    PathBuf::from(base).join("NVGVoice")
+    PathBuf::from(base).join("Sayso")
+}
+
+/// Move the old user folders before the new log or settings are created.
+/// Errors are reported after logging starts and never prevent startup.
+pub fn migrate_legacy_dirs() -> Vec<String> {
+    let old_cfg = PathBuf::from(std::env::var("APPDATA").unwrap_or_else(|_| ".".into()))
+        .join("NVGVoice");
+    let old_data = PathBuf::from(std::env::var("LOCALAPPDATA").unwrap_or_else(|_| ".".into()))
+        .join("NVGVoice");
+    let new_cfg = config_dir();
+    let new_data = data_dir();
+    let mut lines = Vec::new();
+    for (old, new) in [(&old_cfg, &new_cfg), (&old_data, &new_data)] {
+        if let Some(line) = migrate_pair(old, new) {
+            lines.push(line);
+        }
+    }
+
+    let config_path = new_cfg.join("config.json");
+    if config_path.is_file() {
+        match Config::load_from(config_path) {
+            Ok(mut config) => {
+                let changed = rewrite_legacy_paths(
+                    &mut config.raw, &old_cfg, &new_cfg, &old_data, &new_data,
+                );
+                if changed > 0 {
+                    match config.save_checked() {
+                        Ok(()) => lines.push(format!("Updated {changed} legacy path(s) in config.json")),
+                        Err(e) => lines.push(format!("Could not update legacy paths in config.json: {e}")),
+                    }
+                }
+            }
+            Err(e) => lines.push(format!("Could not inspect config.json for legacy paths: {e}")),
+        }
+    }
+    lines
+}
+
+fn migrate_pair(old: &Path, new: &Path) -> Option<String> {
+    if new.exists() || !old.exists() {
+        return None;
+    }
+    match std::fs::rename(old, new) {
+        Ok(()) => Some(format!("Moved legacy folder {} to {}", old.display(), new.display())),
+        Err(rename_error) => match copy_dir_recursive(old, new) {
+            Ok(()) => Some(format!(
+                "Copied legacy folder {} to {} after move failed ({rename_error}); old folder retained",
+                old.display(), new.display(),
+            )),
+            Err(copy_error) => {
+                // A partial copy must not become the app's new data directory.
+                let cleanup = std::fs::remove_dir_all(new).err();
+                Some(format!(
+                    "Could not migrate legacy folder {} to {}: move failed ({rename_error}), copy failed ({copy_error}){}",
+                    old.display(), new.display(),
+                    cleanup.map(|e| format!(", partial-copy cleanup failed ({e})")).unwrap_or_default(),
+                ))
+            }
+        },
+    }
+}
+
+fn copy_dir_recursive(old: &Path, new: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(new)?;
+    for entry in std::fs::read_dir(old)? {
+        let entry = entry?;
+        let destination = new.join(entry.file_name());
+        if entry.file_type()?.is_dir() {
+            copy_dir_recursive(&entry.path(), &destination)?;
+        } else {
+            std::fs::copy(entry.path(), destination)?;
+        }
+    }
+    Ok(())
+}
+
+/// Rewrite top-level string values only. Match whole directory components so
+/// a similarly named sibling folder is never changed.
+fn rewrite_legacy_paths(
+    value: &mut Map<String, Value>, old_cfg: &Path, new_cfg: &Path,
+    old_data: &Path, new_data: &Path,
+) -> usize {
+    let mut changed = 0;
+    for item in value.values_mut() {
+        let Some(path) = item.as_str() else { continue };
+        let replacement = [(old_cfg, new_cfg), (old_data, new_data)]
+            .into_iter()
+            .find_map(|(old, new)| rewrite_path_prefix(path, old, new));
+        if let Some(replacement) = replacement {
+            *item = Value::String(replacement);
+            changed += 1;
+        }
+    }
+    changed
+}
+
+fn rewrite_path_prefix(value: &str, old: &Path, new: &Path) -> Option<String> {
+    let old = old.to_string_lossy();
+    let prefix = value.get(..old.len())?;
+    let same = prefix.replace('\\', "/").to_lowercase()
+        == old.replace('\\', "/").to_lowercase();
+    if !same {
+        return None;
+    }
+    let suffix = value.get(old.len()..)?;
+    if !suffix.is_empty() && !suffix.starts_with('\\') && !suffix.starts_with('/') {
+        return None;
+    }
+    Some(format!("{}{suffix}", new.display()))
 }
 
 /// The capture ring keeps the newest `RING_CAP` recordings so the background
@@ -683,9 +792,54 @@ mod stage2_tests {
 
     fn test_dir(label: &str) -> PathBuf {
         let unique = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let dir = std::env::temp_dir().join(format!("nvg-voice-stage2-{label}-{}-{unique}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("sayso-stage2-{label}-{}-{unique}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         dir
+    }
+
+    #[test]
+    fn legacy_path_rewrite_preserves_other_values() {
+        let old_cfg = Path::new(r"C:\Users\User\AppData\Roaming\NVGVoice");
+        let new_cfg = Path::new(r"C:\Users\User\AppData\Roaming\Sayso");
+        let old_data = Path::new(r"C:\Users\User\AppData\Local\NVGVoice");
+        let new_data = Path::new(r"C:\Users\User\AppData\Local\Sayso");
+        let mut raw = serde_json::json!({
+            "snippets_path": r"C:\Users\User\AppData\Roaming\NVGVoice\snippets.json",
+            "dictionary_path": "c:/users/user/appdata/roaming/nvgvoice/dictionary.json",
+            "capture_path": r"C:\Users\User\AppData\Local\NVGVoice\captures\ring",
+            "similar_sibling": r"C:\Users\User\AppData\Roaming\NVGVoiceExtra\leave.json",
+            "other": "leave this alone",
+            "number": 7,
+            "nested": { "path": r"C:\Users\User\AppData\Roaming\NVGVoice\nested.json" }
+        }).as_object().unwrap().clone();
+        assert_eq!(rewrite_legacy_paths(&mut raw, old_cfg, new_cfg, old_data, new_data), 3);
+        assert_eq!(raw["snippets_path"], r"C:\Users\User\AppData\Roaming\Sayso\snippets.json");
+        assert_eq!(raw["dictionary_path"], r"C:\Users\User\AppData\Roaming\Sayso/dictionary.json");
+        assert_eq!(raw["capture_path"], r"C:\Users\User\AppData\Local\Sayso\captures\ring");
+        assert_eq!(raw["similar_sibling"], r"C:\Users\User\AppData\Roaming\NVGVoiceExtra\leave.json");
+        assert_eq!(raw["other"], "leave this alone");
+        assert_eq!(raw["number"], 7);
+        assert_eq!(raw["nested"]["path"], r"C:\Users\User\AppData\Roaming\NVGVoice\nested.json");
+    }
+
+    #[test]
+    fn legacy_folder_move_is_idempotent_and_does_not_merge() {
+        let root = test_dir("migration");
+        let old = root.join("NVGVoice");
+        let new = root.join("Sayso");
+        std::fs::create_dir_all(old.join("nested")).unwrap();
+        std::fs::write(old.join("nested").join("file.txt"), b"kept").unwrap();
+        assert!(migrate_pair(&old, &new).is_some());
+        assert_eq!(std::fs::read(new.join("nested").join("file.txt")).unwrap(), b"kept");
+        assert!(!old.exists());
+        assert!(migrate_pair(&old, &new).is_none());
+
+        std::fs::create_dir_all(&old).unwrap();
+        std::fs::write(old.join("another.txt"), b"old").unwrap();
+        assert!(migrate_pair(&old, &new).is_none());
+        assert_eq!(std::fs::read(old.join("another.txt")).unwrap(), b"old");
+        assert!(!new.join("another.txt").exists());
+        std::fs::remove_dir_all(root).unwrap();
     }
 
     fn read(path: &Path) -> Value { serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap() }

@@ -30,7 +30,7 @@ its own file.
 ## Reporting a bug
 
 Include the Windows version, the app version (Settings > System), the log file
-(`%LOCALAPPDATA%\NVGVoice\logs\nvg-voice.log`; it contains no dictated text and
+(`%LOCALAPPDATA%\Sayso\logs\sayso.log`; it contains no dictated text and
 no key) and the app you were dictating into.
 
 ## Licence

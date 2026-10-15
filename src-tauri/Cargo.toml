@@ -1,12 +1,12 @@
 [package]
-name = "nvg-voice"
+name = "sayso"
 version = "0.1.0"
-description = "NVG Voice - push-to-talk dictation for Windows"
+description = "Sayso - push-to-talk dictation for Windows"
 edition = "2021"
 rust-version = "1.77.2"
 
 [[bin]]
-name = "nvg-voice"
+name = "sayso"
 path = "src/main.rs"
 
 [build-dependencies]

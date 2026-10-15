@@ -1,18 +1,17 @@
-; NVG Voice (Rust app) NSIS 3 installer. Per-user, no admin.
-; Build: pwsh app/installer/build.ps1   (or makensis /DVERSION=x.y.z installer.nsi)
-; Keeps the identity of the retired Python installer (same folder, uninstall
-; key and Run value name) so an old install is upgraded in place.
+; Sayso NSIS 3 installer. Per-user, no admin.
+; Build: makensis /DVERSION=x.y.z installer.nsi
+; Upgrades an earlier install. The app moves user data on first start;
+; the installer never moves user data.
 ;
-; Silent: NVG-Voice-Setup-<ver>.exe /S [/AUTOSTART=1] [/NORUN=1] [/D=<dir>]
+; Silent: Sayso-Setup-<ver>.exe /S [/AUTOSTART=1] [/NORUN=1] [/D=<dir>]
 
-!define APP_NAME      "NVG Voice"
-!define APP_EXE       "nvg-voice.exe"
-!define OLD_EXE       "NVGVoice.exe"
+!define APP_NAME      "Sayso"
+!define APP_EXE       "sayso.exe"
 !define PUBLISHER     "Nexus Vantage Group"
 !ifndef VERSION
   !define VERSION "0.1.0"
 !endif
-!define UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\NVG Voice"
+!define UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\Sayso"
 !define RUN_KEY       "Software\Microsoft\Windows\CurrentVersion\Run"
 !define WV2_GUID      "{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
 !define WV2_URL       "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
@@ -22,7 +21,7 @@
 !include "LogicLib.nsh"
 
 Name "${APP_NAME} ${VERSION}"
-OutFile "${__FILEDIR__}\out\NVG-Voice-Setup-${VERSION}.exe"
+OutFile "${__FILEDIR__}\out\Sayso-Setup-${VERSION}.exe"
 InstallDir "$LOCALAPPDATA\${APP_NAME}"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
@@ -55,7 +54,7 @@ Function LaunchApp
 FunctionEnd
 
 Function SetAutostart
-  WriteRegStr HKCU "${RUN_KEY}" "NVGVoice" '"$INSTDIR\${APP_EXE}"'
+  WriteRegStr HKCU "${RUN_KEY}" "Sayso" '"$INSTDIR\${APP_EXE}"'
 FunctionEnd
 
 ; Waits (bounded) for ${APP_EXE} to be writable, or absent, so a File
@@ -105,20 +104,35 @@ Function CheckWebView2
 FunctionEnd
 
 Section "Main Application" SecMain
-  ; Close a running app (new Rust exe or the old Python exe).
-  nsExec::Exec 'taskkill /F /IM ${APP_EXE}'
+  ; Close the new app and both earlier executable names.
+  nsExec::Exec 'taskkill /F /IM sayso.exe'
   Pop $0
-  nsExec::Exec 'taskkill /F /IM ${OLD_EXE}'
+  nsExec::Exec 'taskkill /F /IM nvg-voice.exe'
+  Pop $0
+  nsExec::Exec 'taskkill /F /IM NVGVoice.exe'
   Pop $0
   Call WaitForExeWritable
 
-  ; Upgrade from the Python install: bundled config copy and old exe.
-  ; User data lives in %APPDATA% / %LOCALAPPDATA%\NVGVoice, not here.
-  ${If} ${FileExists} "$INSTDIR\${OLD_EXE}"
-    Delete "$INSTDIR\${OLD_EXE}"
-    Delete "$DESKTOP\${APP_NAME}.lnk"
+  ; Remove only known files from the old install folder.
+  ${If} ${FileExists} "$LOCALAPPDATA\NVG Voice"
+    Delete "$LOCALAPPDATA\NVG Voice\nvg-voice.exe"
+    Delete "$LOCALAPPDATA\NVG Voice\NVGVoice.exe"
+    Delete "$LOCALAPPDATA\NVG Voice\Uninstall.exe"
+    RMDir /r "$LOCALAPPDATA\NVG Voice\config"
+    RMDir "$LOCALAPPDATA\NVG Voice"
   ${EndIf}
-  RMDir /r "$INSTDIR\config"
+  Delete "$SMPROGRAMS\NVG Voice\NVG Voice.lnk"
+  Delete "$SMPROGRAMS\NVG Voice\Uninstall NVG Voice.lnk"
+  RMDir "$SMPROGRAMS\NVG Voice"
+  Delete "$SMPROGRAMS\NVG Voice.lnk"
+  Delete "$DESKTOP\NVG Voice.lnk"
+  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\NVG Voice"
+  ReadRegStr $3 HKCU "${RUN_KEY}" "NVGVoice"
+  ${If} $3 != ""
+    DeleteRegValue HKCU "${RUN_KEY}" "NVGVoice"
+    Call SetAutostart
+  ${EndIf}
+  DeleteRegValue HKCU "${RUN_KEY}" "Vox"
 
   ; WebView2 check (do not abort; dictation works without it).
   Call CheckWebView2
@@ -133,7 +147,7 @@ Section "Main Application" SecMain
   File "${__FILEDIR__}\..\target\release\${APP_EXE}"
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
-  ; Shortcuts (same names as the Python install, so they are overwritten).
+  ; Shortcuts.
   Delete "$SMPROGRAMS\${APP_NAME}.lnk"
   CreateDirectory "$SMPROGRAMS\${APP_NAME}"
   CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}"
@@ -169,10 +183,9 @@ SectionEnd
 Section "Uninstall"
   nsExec::Exec 'taskkill /F /IM ${APP_EXE}'
   Pop $0
-  nsExec::Exec 'taskkill /F /IM ${OLD_EXE}'
-  Pop $0
   Call un.WaitForExeWritable
 
+  DeleteRegValue HKCU "${RUN_KEY}" "Sayso"
   DeleteRegValue HKCU "${RUN_KEY}" "NVGVoice"
   DeleteRegValue HKCU "${RUN_KEY}" "Vox"
 
@@ -185,5 +198,5 @@ Section "Uninstall"
   RMDir  "$SMPROGRAMS\${APP_NAME}"
 
   DeleteRegKey HKCU "${UNINSTALL_KEY}"
-  ; %APPDATA%\NVGVoice and %LOCALAPPDATA%\NVGVoice (user data) are left alone.
+  ; %APPDATA%\Sayso and %LOCALAPPDATA%\Sayso (user data) are left alone.
 SectionEnd

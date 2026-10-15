@@ -1,4 +1,4 @@
-# NVG Voice
+# Sayso
 
 Push-to-talk voice dictation for Windows. Hold a key, talk, let go: the words
 are typed into whatever window is in front. Bring your own xAI API key; there
@@ -10,6 +10,11 @@ recogniser heard (after light, rule-based clean-up you can switch off), it
 learns the names and technical terms you use so they stop coming out wrong, and
 it stays out of the way: about 4 MB of memory while idle, no window until you
 open one.
+
+<p align="center">
+  <img src="docs/screenshots/flyout.png" width="360" alt="The tray flyout: status line, microphone level, recording mode, and the recent dictations list with copy and fix-a-word actions">
+  <img src="docs/screenshots/settings.png" width="480" alt="The Settings window on the Dictation tab: shortcut, shortcut suppression, recording mode and microphone">
+</p>
 
 ## What it does
 
@@ -58,17 +63,17 @@ cloud account.
 
 ## Install
 
-1. Download `NVG-Voice-Setup-<version>.exe` from the
+1. Download `Sayso-Setup-<version>.exe` from the
    [Releases](../../releases) page.
 2. Run it. The installer is not code-signed, so Windows SmartScreen shows
    "Windows protected your PC": click **More info**, then **Run anyway**. It
    installs for the current user only (no admin prompt) into
-   `%LOCALAPPDATA%\NVG Voice`.
+   `%LOCALAPPDATA%\Sayso`.
 3. Start the app, click the tray icon, open **Settings > API key** and paste
    your xAI key. It is encrypted with Windows DPAPI and stored on your machine.
 4. Put the cursor in any text field, hold `Ctrl+Space`, speak, release.
 
-Silent install: `NVG-Voice-Setup-<version>.exe /S [/AUTOSTART=1] [/NORUN=1]`.
+Silent install: `Sayso-Setup-<version>.exe /S [/AUTOSTART=1] [/NORUN=1]`.
 Uninstalling removes the program and shortcuts and keeps your settings, key,
 dictionary and history.
 
@@ -120,8 +125,8 @@ Everything the app stores is in two folders:
 
 | Folder | Files |
 |---|---|
-| `%APPDATA%\NVGVoice` | `config.json` (settings), `xai_key.enc` (your key, DPAPI-encrypted), `dictionary.json` (your corrections), `vocabulary.json`, `auto_dictionary.json`, `review_state.json` (automatic vocabulary) |
-| `%LOCALAPPDATA%\NVGVoice` | `history.jsonl` (your dictations; off with `history_enabled: false`), `logs\nvg-voice.log`, `captures\rust-last.wav` (the last recording), `captures\ring\` (the last 30, automatic vocabulary only) |
+| `%APPDATA%\Sayso` | `config.json` (settings), `xai_key.enc` (your key, DPAPI-encrypted), `dictionary.json` (your corrections), `vocabulary.json`, `auto_dictionary.json`, `review_state.json` (automatic vocabulary) |
+| `%LOCALAPPDATA%\Sayso` | `history.jsonl` (your dictations; off with `history_enabled: false`), `logs\sayso.log`, `captures\rust-last.wav` (the last recording), `captures\ring\` (the last 30, automatic vocabulary only) |
 
 What leaves your machine:
 
@@ -140,7 +145,7 @@ web view. `XAI_API_KEY` in the environment takes precedence over the stored key.
 ## Configuration
 
 Settings covers the common options. Everything lives in
-`%APPDATA%\NVGVoice\config.json`; keys not shown in Settings are marked.
+`%APPDATA%\Sayso\config.json`; keys not shown in Settings are marked.
 
 | Key | Default | Meaning |
 |---|---|---|

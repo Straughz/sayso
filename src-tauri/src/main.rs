@@ -1,4 +1,4 @@
-//! NVG Voice — stage 1 dictation core.
+//! Sayso - push-to-talk dictation core.
 //!
 //! Tray app with the native pill and working push-to-talk dictation. Reads the
 //! Python app's config, DPAPI key and history files. No flyout content yet.
@@ -45,8 +45,12 @@ fn main() {
     // before any network use.
     let _ = rustls::crypto::ring::default_provider().install_default();
 
+    let migration_lines = store::migrate_legacy_dirs();
     let _ = std::fs::create_dir_all(log::log_path().parent().unwrap_or(std::path::Path::new(".")));
     log::info("process_start");
+    for line in migration_lines {
+        log::info(&line);
+    }
 
     unsafe {
         let _ = SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
@@ -231,7 +235,7 @@ fn main() {
 }
 
 fn single_instance() -> bool {
-    let name: Vec<u16> = "NvgVoice_SingleInstance\0".encode_utf16().collect();
+    let name: Vec<u16> = "Sayso_SingleInstance\0".encode_utf16().collect();
     unsafe {
         let handle = CreateMutexW(std::ptr::null(), 0, name.as_ptr());
         if handle.is_null() {

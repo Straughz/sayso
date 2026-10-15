@@ -94,7 +94,7 @@ impl SttEngine for XaiStt {
         // cache, so the multipart body is assembled by hand. Field order is
         // preserved by construction and `file` is written last, matching the
         // xAI rule in src/vox/asr/xai.py.
-        let boundary = format!("----NVGVoiceBoundary{:x}", now_millis());
+        let boundary = format!("----SaysoBoundary{:x}", now_millis());
         let body = build_multipart(&boundary, wav, hints, self.vad_threshold);
 
         let response = self

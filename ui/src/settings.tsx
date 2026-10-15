@@ -48,7 +48,7 @@ function Settings() {
   const save = (key: string, value: unknown, needsRestart = false) => void run(async () => {
     setSettings(await api.set(key, value));
     if (needsRestart) setRestart(list => [...new Set([...list, key])]);
-    setMessage(needsRestart ? 'Saved. Restart NVG Voice to apply.' : 'Saved');
+    setMessage(needsRestart ? 'Saved. Restart Sayso to apply.' : 'Saved');
   }, setMessage);
   useEffect(() => {
     if (!capturing) return;
@@ -85,21 +85,21 @@ function Settings() {
     return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp); window.removeEventListener('blur', onBlur); };
   }, [capturing]);
   const boolRow = (title: string, description: string, field: keyof Snapshot, key: string, needsRestart = false) =>
-    <Row title={title} description={description} note={restart.includes(key) ? 'Restart NVG Voice to apply' : undefined}>
+    <Row title={title} description={description} note={restart.includes(key) ? 'Restart Sayso to apply' : undefined}>
       <label className="tg"><input type="checkbox" checked={Boolean(settings?.[field])} onChange={e => save(key, e.target.checked, needsRestart)}/><span className="tk"/><span className="sr-only">{title}</span></label>
     </Row>;
-  return <main className="settings-window"><header className="settings-head"><span className="mark">●</span><span>NVG Voice</span><button className="settings-close" type="button" onClick={() => void api.closeSettings()} aria-label="Close settings"><Icon name="close" size={16}/></button></header>
+  return <main className="settings-window"><header className="settings-head"><span className="mark">●</span><span>Sayso</span><button className="settings-close" type="button" onClick={() => void api.closeSettings()} aria-label="Close settings"><Icon name="close" size={16}/></button></header>
     <nav className="fx-seg settings-tabs" role="tablist" aria-label="Settings sections">{TABS.map(([id, label], index) =>
       <button key={id} ref={node => { tabRefs.current[index] = node; }} type="button" role="tab" id={`tab-${id}`} aria-selected={tab === id} aria-controls="settings-panel" tabIndex={tab === id ? 0 : -1}
         onClick={() => setTab(id)} onKeyDown={e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); const next = (index + (e.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length; tabRefs.current[next]?.focus(); setTab(TABS[next][0]); } }}>{label}</button>)}</nav>
     <div className="settings-scroll" id="settings-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} key={tab}>
       {tab === 'dictation' && <section aria-labelledby="dictation-title"><h2 id="dictation-title" className="sr-only">Dictation</h2>
-        <Row title="Shortcut" description="Hold or press this key combination to dictate" note={restart.includes('hotkey') ? 'Restart NVG Voice to apply' : undefined}>
+        <Row title="Shortcut" description="Hold or press this key combination to dictate" note={restart.includes('hotkey') ? 'Restart Sayso to apply' : undefined}>
           <button type="button" className="keycap" onClick={() => { setMessage(''); setCapturing(true); }} onBlur={() => setCapturing(false)} aria-label={capturing ? 'Press a new shortcut' : `Change shortcut, currently ${settings?.hotkey ?? ''}`} aria-live="polite">{capturing ? 'Press keys…' : settings?.hotkey ?? 'Loading'}</button>
         </Row>
         {boolRow('Keep shortcut out of focused app', 'Prevent the key combination from reaching your other app', 'suppressHotkey', 'suppress_hotkey', true)}
         <Row title="Recording mode" description="Hold the shortcut or press once to start and stop"><ModeSwitch mode={settings?.recordingMode ?? 'hold'} onChange={m => save('recording_mode', m)}/></Row>
-        <Row title="Microphone" description="Choose an input device" note={restart.includes('mic_device') ? 'Restart NVG Voice to apply' : undefined}>
+        <Row title="Microphone" description="Choose an input device" note={restart.includes('mic_device') ? 'Restart Sayso to apply' : undefined}>
           <select className="combo" aria-label="Microphone" value={settings?.micDevice ?? ''} onChange={e => save('mic_device', e.target.value, true)}><option value="">System default</option>{microphones.map(name => <option key={name} value={name}>{name}</option>)}</select>
         </Row>
       </section>}
@@ -117,8 +117,8 @@ function Settings() {
         {boolRow('Learn my vocabulary automatically', 'Adds names from your folders and your own dictations as hints for the recogniser. Nothing is replaced in your text.', 'autoVocabulary', 'auto_vocabulary')}
       </section>}
       {tab === 'system' && <section aria-labelledby="system-title"><h2 id="system-title" className="sr-only">System</h2>
-        {boolRow('Launch at startup', 'Start NVG Voice when you sign in', 'launchOnStartup', 'launch_on_startup')}
-        <Row title="NVG Voice" description={`Version ${settings?.version ?? '…'}`}><button type="button" className="plain-button" onClick={() => void run(() => api.logs(), setMessage)}>Open log folder</button></Row>
+        {boolRow('Launch at startup', 'Start Sayso when you sign in', 'launchOnStartup', 'launch_on_startup')}
+        <Row title="Sayso" description={`Version ${settings?.version ?? '…'}`}><button type="button" className="plain-button" onClick={() => void run(() => api.logs(), setMessage)}>Open log folder</button></Row>
       </section>}
     </div>{message && <div className="settings-message" role="status">{message}</div>}
   </main>;

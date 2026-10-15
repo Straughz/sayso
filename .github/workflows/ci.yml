@@ -43,5 +43,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: nvg-voice-exe
-          path: target/release/nvg-voice.exe
+          name: sayso-exe
+          path: target/release/sayso.exe

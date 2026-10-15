@@ -61,7 +61,7 @@ pub fn build(
     let _ = PAUSE_ITEM.set(pause.clone());
 
     let builder = TrayIconBuilder::with_id("main")
-        .tooltip("NVG Voice")
+        .tooltip("Sayso")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(move |app, event| match event.id().0.as_str() {
@@ -162,7 +162,7 @@ fn open_flyout(app: &AppHandle) {
 
     let (x, y) = flyout_position(app);
     let built = WebviewWindowBuilder::new(app, "flyout", WebviewUrl::App("index.html".into()))
-        .title("NVG Voice Flyout")
+        .title("Sayso Flyout")
         .inner_size(FLYOUT_W, FLYOUT_H)
         .position(x, y)
         .decorations(false)

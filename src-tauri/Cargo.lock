@@ -2080,23 +2080,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nvg-voice"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "cpal",
- "regex",
- "reqwest",
- "rustls",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tiny-skia",
- "windows-sys 0.61.2",
-]
-
-[[package]]
 name = "objc2"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2863,6 +2846,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "sayso"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "cpal",
+ "regex",
+ "reqwest",
+ "rustls",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tiny-skia",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

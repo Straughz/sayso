@@ -12,8 +12,8 @@ uses React 19.2.7, TypeScript 6.0.3, and Vite 8.1.0. The Vite output is
 `ui/dist`; Tauri embeds it through `frontendDist`.
 
 From `src-tauri`, run `cargo test` and `cargo build --release`. The release
-executable is `target/release/nvg-voice.exe` (the target directory sits next to
-`src-tauri`, see `.cargo/config.toml`). Do not run it while another NVG Voice
+executable is `target/release/sayso.exe` (the target directory sits next to
+`src-tauri`, see `.cargo/config.toml`). Do not run it while another Sayso
 instance is active: both would use the hotkey and shared user data. For visual
 work, use `pnpm dev` in `ui`. Its development-only Tauri mock lives in
 `ui/src/dev/` and is excluded from production by Vite's `DEV` branch.
@@ -29,15 +29,14 @@ mkdir out
 "C:\Program Files (x86)\NSIS\makensis.exe" /DVERSION=0.1.0 installer.nsi
 ```
 
-Output: `installer/out/NVG-Voice-Setup-<version>.exe` (git-ignored). It
-installs the single exe to `%LOCALAPPDATA%\NVG Voice`, the same folder,
-uninstall key and Run value name (`NVGVoice`) earlier releases used, so an old
-install is upgraded in place. It closes a running copy before copying.
+Output: `installer/out/Sayso-Setup-<version>.exe` (git-ignored). It
+installs the single exe to `%LOCALAPPDATA%\Sayso`, registers a `Sayso`
+uninstall entry and Run value, and closes a running copy before copying.
 
 Silent install: `/S`, plus `/AUTOSTART=1` to start at sign-in and `/NORUN=1` to
 not launch afterwards. Uninstall removes the exe, shortcuts, Run value and
-uninstall key; it never touches `%APPDATA%\NVGVoice` or
-`%LOCALAPPDATA%\NVGVoice` (settings, API key, history, logs).
+uninstall key; it never touches `%APPDATA%\Sayso` or
+`%LOCALAPPDATA%\Sayso` (settings, API key, history, logs).
 
 The exe links the C runtime statically (`.cargo/config.toml`, `crt-static`).
 Without that it needs `VCRUNTIME140.dll`, which a clean Windows does not have,
@@ -45,13 +44,19 @@ and it stops at a system error box before `main` runs.
 
 ## Windows data
 
-Settings live in `%APPDATA%/NVGVoice/config.json`, the API key in
-`xai_key.enc` next to it, and history in `%LOCALAPPDATA%/NVGVoice/history.jsonl`.
+Settings live in `%APPDATA%/Sayso/config.json`, the API key in
+`xai_key.enc` next to it, and history in `%LOCALAPPDATA%/Sayso/history.jsonl`.
 All writes go through `store.rs` (temp file + rename; a broken config is never
 overwritten). The API key is encrypted by DPAPI and is never sent to
 the webview or written to the log. The user dictionary lives at the configured
 `dictionary_path`; the first correction creates
-`%APPDATA%/NVGVoice/dictionary.json`, seeded with the bundled entries.
+`%APPDATA%/Sayso/dictionary.json`, seeded with the bundled entries.
+
+On first start, Sayso moves `%APPDATA%\NVGVoice` and `%LOCALAPPDATA%\NVGVoice`
+from earlier NVG Voice releases to the Sayso folders and rewrites absolute paths
+in `config.json` that pointed into them; the installer removes the old
+`NVG Voice` install folder, shortcuts and uninstall entry and carries the
+autostart setting over.
 
 ## Tauri commands
 
@@ -76,7 +81,7 @@ Recording mode, pause, vocabulary, API key, filler removal, capitalisation,
 code mode, trailing space, and dictionary corrections apply to the next
 dictation without restarting. Hotkey, shortcut suppression, and microphone
 choice save immediately but require a restart; Settings marks those rows.
-Launch at startup updates the current user's `NVGVoice` Run value immediately.
+Launch at startup updates the current user's `Sayso` Run value immediately.
 
 The flyout's ambient layer uses a slow transform while visible; reduced-motion
 users see a still panel. History search waits briefly after typing, and the

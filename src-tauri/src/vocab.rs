@@ -3,7 +3,7 @@
 //! * The manual list stays in `config.json` `hot_words`; the pool only keeps
 //!   usage statistics for those terms (`source: manual`) and everything about
 //!   the automatic ones.
-//! * File `%APPDATA%\NVGVoice\vocabulary.json`, written temp-file + rename. A
+//! * File `%APPDATA%\Sayso\vocabulary.json`, written temp-file + rename. A
 //!   file that does not parse is logged once and never overwritten.
 //! * Nothing here logs a term, a folder path or dictated text.
 
@@ -695,7 +695,7 @@ mod tests {
 
     fn test_dir(label: &str) -> PathBuf {
         let unique = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let dir = std::env::temp_dir().join(format!("nvg-voice-vocab-{label}-{}-{unique}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("sayso-vocab-{label}-{}-{unique}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }

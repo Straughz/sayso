@@ -10,7 +10,7 @@ async function invoke<T>(name: string, args?: Record<string, unknown>): Promise<
     if (!mock) mock = (await import('./dev/mock')).mockInvoke;
     return mock<T>(name, args);
   }
-  throw new Error('NVG Voice native bridge is unavailable');
+  throw new Error('Sayso native bridge is unavailable');
 }
 
 export const api = {

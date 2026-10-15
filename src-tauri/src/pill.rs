@@ -198,8 +198,8 @@ unsafe fn run(level_rx: Receiver<f32>, ready_tx: std::sync::mpsc::Sender<()>) ->
     let pos = POINT { x, y };
 
     let hinstance = GetModuleHandleW(std::ptr::null());
-    let class_name = wide("NvgVoicePill\0");
-    let window_name = wide("NVG Voice Pill\0");
+    let class_name = wide("SaysoPill\0");
+    let window_name = wide("Sayso Pill\0");
 
     let wc = WNDCLASSW {
         lpfnWndProc: Some(wndproc),
