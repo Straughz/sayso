@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sayso social preview 1280x640</title>
+<style>
+  :root {
+    --ground: #1b1d22;
+    --ink: #f2efe8;
+    --muted: #a7a49c;
+  }
+  html, body { margin: 0; padding: 0; background: var(--ground); }
+  body {
+    width: 1280px; height: 640px; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    font-family: Bahnschrift, "Segoe UI", sans-serif;
+    color: var(--ink);
+  }
+  .lockup { display: flex; align-items: center; gap: 40px; }
+  .lockup svg { width: 176px; height: 176px; display: block; }
+  .word {
+    font-weight: 600; font-variation-settings: "wght" 600;
+    font-size: 184px; line-height: 1; letter-spacing: -0.02em;
+    margin-top: -10px;
+  }
+  .line { font-weight: 400; font-variation-settings: "wght" 400; font-size: 40px; line-height: 1.3; color: var(--muted); margin-top: 36px; }
+  .line b { font-weight: 400; color: var(--ink); }
+  .small { font-weight: 400; font-variation-settings: "wght" 400; font-size: 28px; line-height: 1.3; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+  <div class="lockup">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true">
+      <g fill="#f2efe8">
+        <rect x="73" y="58" width="22" height="140" rx="11"/>
+        <rect x="54" y="58" width="60" height="18" rx="9"/>
+        <rect x="54" y="180" width="60" height="18" rx="9"/>
+        <rect x="121" y="106" width="22" height="44" rx="11"/>
+        <rect x="151" y="82" width="22" height="92" rx="11"/>
+        <rect x="181" y="96" width="22" height="64" rx="11"/>
+      </g>
+    </svg>
+    <div class="word">Sayso</div>
+  </div>
+  <div class="line">Push-to-talk dictation for <b>Windows</b></div>
+  <div class="small">Open source, Apache-2.0</div>
+</body>
+</html>

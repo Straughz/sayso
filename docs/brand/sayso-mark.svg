@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Sayso mark, regular (dark tile, for dark taskbars and the app icon). Palette P1 "Ink and signal": tile #1b1d22, ink #f2efe8. -->
+  <!-- A text cursor with three voice-level bars beside it: voice arrives where the cursor is. Use sayso-mark-small.svg at 24 px and below. -->
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="#1b1d22"/>
+  <g fill="#f2efe8">
+    <rect x="73" y="58" width="22" height="140" rx="11"/>
+    <rect x="54" y="58" width="60" height="18" rx="9"/>
+    <rect x="54" y="180" width="60" height="18" rx="9"/>
+    <rect x="121" y="106" width="22" height="44" rx="11"/>
+    <rect x="151" y="82" width="22" height="92" rx="11"/>
+    <rect x="181" y="96" width="22" height="64" rx="11"/>
+  </g>
+</svg>

@@ -1,3 +1,5 @@
+<img src="docs/brand/sayso-mark.svg" width="64" alt="">
+
 # Sayso
 
 Push-to-talk voice dictation for Windows. Hold a key, talk, let go: the words
