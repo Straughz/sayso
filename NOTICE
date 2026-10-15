@@ -1,0 +1,61 @@
+NVG Voice - push-to-talk voice dictation for Windows
+Copyright 2026 Kavish Singh (Nexus Vantage Group)
+https://github.com/Straughz
+
+Created and maintained by Kavish Singh.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+If you fork or redistribute this software, keep this NOTICE file and the
+attribution above (Apache License, Section 4(d)).
+
+----------------------------------------------------------------------
+
+This product includes or depends on the following third-party software.
+
+Rust crates (see src-tauri/Cargo.lock for the full tree and exact versions):
+
+  tauri, tauri-build, wry, tao      Apache-2.0 OR MIT
+  windows-sys, webview2-com         MIT OR Apache-2.0 / MIT
+  cpal                              Apache-2.0
+  tiny-skia                         BSD-3-Clause
+  reqwest, hyper, tokio             MIT OR Apache-2.0 / MIT
+  rustls                            Apache-2.0 OR ISC OR MIT
+  ring                              Apache-2.0 AND ISC
+  webpki-roots                      CDLA-Permissive-2.0 (Mozilla root store)
+  regex, serde, serde_json, chrono  MIT OR Apache-2.0
+
+  Every crate in the dependency tree is under a permissive licence
+  (MIT, Apache-2.0, BSD, ISC, Zlib, Unicode-3.0, MPL-2.0, Unlicense,
+  CC0, 0BSD or CDLA-Permissive-2.0). Crates that offer a GPL/LGPL
+  alternative are used under their MIT or Apache-2.0 option.
+
+JavaScript (see ui/package.json and ui/pnpm-lock.yaml):
+
+  React, React DOM                  MIT
+  Vite, TypeScript                  MIT / Apache-2.0 (build tools only)
+
+Data:
+
+  src-tauri/assets/words_alpha.txt  English word list from
+                                    github.com/dwyl/english-words
+                                    (public domain, Unlicense).
+                                    Used only to decide whether a
+                                    misheard form is a real word.
+
+Runtime services (not bundled; you bring your own account):
+
+  xAI API (speech-to-text and the optional vocabulary review) is a
+  third-party service under xAI's own terms. Audio and, when the
+  automatic vocabulary is on, recent transcripts are sent to it. See
+  the Privacy section of the README.

@@ -1,0 +1,57 @@
+[package]
+name = "nvg-voice"
+version = "0.1.0"
+description = "NVG Voice - push-to-talk dictation for Windows"
+edition = "2021"
+rust-version = "1.77.2"
+
+[[bin]]
+name = "nvg-voice"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "=2.6.3", features = [] }
+
+[dependencies]
+# Every dependency is pinned exactly. Bump on purpose, then re-run the tests
+# and a clean-Windows install check (see docs/DEVELOPMENT.md).
+tauri = { version = "=2.11.3", features = ["tray-icon"] }
+windows-sys = { version = "=0.61.2", features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_Graphics_Dwm",
+  "Win32_Security",
+  "Win32_Security_Cryptography",
+  "Win32_System_DataExchange",
+  "Win32_System_LibraryLoader",
+  "Win32_System_Memory",
+  "Win32_System_Registry",
+  "Win32_System_Threading",
+  "Win32_UI_HiDpi",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_WindowsAndMessaging",
+] }
+cpal = "=0.16.0"
+tiny-skia = "=0.11.4"
+chrono = "=0.4.45"
+reqwest = { version = "=0.13.4", default-features = false, features = [
+  "blocking",
+  "json",
+  "http2",
+  "rustls-no-provider",
+] }
+# rustls with the ring provider (aws-lc-rs would need NASM and cmake on
+# Windows). reqwest's rustls-no-provider leaves provider selection to us;
+# ring is enabled here and installed once in main().
+rustls = { version = "=0.23.41", default-features = false, features = [
+  "ring",
+  "std",
+  "tls12",
+  "logging",
+] }
+regex = "=1.12.4"
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.150"
+
+[profile.release]
+strip = true

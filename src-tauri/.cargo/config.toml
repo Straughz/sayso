@@ -1,0 +1,9 @@
+[build]
+# Keep the (large) build output inside the worktree, not the shared cargo target.
+target-dir = "../target"
+
+# Link the C runtime into the exe. Without this the app needs VCRUNTIME140.dll,
+# which a clean Windows install does not have: the app then dies at start-up
+# with a system error box before main() runs (seen on the clean test VM).
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

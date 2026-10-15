@@ -1,0 +1,6 @@
+{
+  "identifier": "default",
+  "description": "Flyout and settings window capability",
+  "windows": ["flyout", "settings"],
+  "permissions": ["core:default"]
+}
