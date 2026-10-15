@@ -61,8 +61,77 @@ pub fn migrate_legacy_dirs() -> Vec<String> {
 }
 
 fn migrate_pair(old: &Path, new: &Path) -> Option<String> {
-    if new.exists() || !old.exists() {
+    if !old.exists() {
         return None;
+    }
+    if new.exists() {
+        let entries = match std::fs::read_dir(old) {
+            Ok(entries) => entries,
+            Err(e) => return Some(format!("Could not read legacy folder {}: {e}", old.display())),
+        };
+        let mut moved = 0;
+        let mut skipped = 0;
+        let mut failures = Vec::new();
+        for entry in entries {
+            let entry = match entry {
+                Ok(entry) => entry,
+                Err(e) => {
+                    failures.push(format!("could not read entry: {e}"));
+                    continue;
+                }
+            };
+            let source = entry.path();
+            let destination = new.join(entry.file_name());
+            if destination.exists() {
+                skipped += 1;
+                continue;
+            }
+            if let Err(rename_error) = std::fs::rename(&source, &destination) {
+                let copied = match entry.file_type() {
+                    Ok(kind) if kind.is_dir() => copy_dir_recursive(&source, &destination),
+                    Ok(_) => std::fs::copy(&source, &destination).map(|_| ()),
+                    Err(e) => Err(e),
+                };
+                if let Err(copy_error) = copied {
+                    // Leave the source in place, and clear a partial destination for a retry.
+                    if destination.is_dir() {
+                        let _ = std::fs::remove_dir_all(&destination);
+                    } else if destination.is_file() {
+                        let _ = std::fs::remove_file(&destination);
+                    }
+                    failures.push(format!("{}: move failed ({rename_error}), copy failed ({copy_error})", source.display()));
+                    continue;
+                }
+                let removed = if source.is_dir() {
+                    std::fs::remove_dir_all(&source)
+                } else {
+                    std::fs::remove_file(&source)
+                };
+                if let Err(e) = removed {
+                    failures.push(format!("{}: copied but could not remove source ({e})", source.display()));
+                    continue;
+                }
+            }
+            moved += 1;
+        }
+        if let Ok(mut entries) = std::fs::read_dir(old) {
+            if entries.next().is_none() {
+                if let Err(e) = std::fs::remove_dir(old) {
+                    failures.push(format!("could not remove empty folder {}: {e}", old.display()));
+                }
+            }
+        }
+        if moved == 0 && skipped == 0 && failures.is_empty() {
+            return None;
+        }
+        let mut line = format!(
+            "Merged {moved} entr(ies) from {} into {} ({skipped} skipped: already present)",
+            old.display(), new.display(),
+        );
+        if !failures.is_empty() {
+            line.push_str(&format!("; {}", failures.join("; ")));
+        }
+        return Some(line);
     }
     match std::fs::rename(old, new) {
         Ok(()) => Some(format!("Moved legacy folder {} to {}", old.display(), new.display())),
@@ -823,7 +892,7 @@ mod stage2_tests {
     }
 
     #[test]
-    fn legacy_folder_move_is_idempotent_and_does_not_merge() {
+    fn legacy_folder_move_is_idempotent() {
         let root = test_dir("migration");
         let old = root.join("NVGVoice");
         let new = root.join("Sayso");
@@ -836,9 +905,48 @@ mod stage2_tests {
 
         std::fs::create_dir_all(&old).unwrap();
         std::fs::write(old.join("another.txt"), b"old").unwrap();
-        assert!(migrate_pair(&old, &new).is_none());
-        assert_eq!(std::fs::read(old.join("another.txt")).unwrap(), b"old");
-        assert!(!new.join("another.txt").exists());
+        assert!(migrate_pair(&old, &new).unwrap().starts_with("Merged 1"));
+        assert!(!old.exists());
+        assert_eq!(std::fs::read(new.join("another.txt")).unwrap(), b"old");
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn migrate_pair_merges_into_existing_new_dir() {
+        let root = test_dir("migration-merge");
+        let old = root.join("NVGVoice");
+        let new = root.join("Sayso");
+        std::fs::create_dir_all(old.join("captures").join("ring")).unwrap();
+        std::fs::write(old.join("history.jsonl"), b"history").unwrap();
+        std::fs::write(old.join("captures").join("ring").join("1.wav"), b"audio").unwrap();
+        std::fs::create_dir_all(new.join("logs")).unwrap();
+        std::fs::write(new.join("sayso.exe"), b"exe").unwrap();
+        std::fs::write(new.join("logs").join("sayso.log"), b"log").unwrap();
+
+        assert!(migrate_pair(&old, &new).unwrap().starts_with("Merged 2"));
+        assert!(!old.exists());
+        assert_eq!(std::fs::read(new.join("history.jsonl")).unwrap(), b"history");
+        assert_eq!(std::fs::read(new.join("captures").join("ring").join("1.wav")).unwrap(), b"audio");
+        assert_eq!(std::fs::read(new.join("sayso.exe")).unwrap(), b"exe");
+        assert_eq!(std::fs::read(new.join("logs").join("sayso.log")).unwrap(), b"log");
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn migrate_pair_keeps_entries_that_already_exist_in_new() {
+        let root = test_dir("migration-conflict");
+        let old = root.join("NVGVoice");
+        let new = root.join("Sayso");
+        std::fs::create_dir_all(&old).unwrap();
+        std::fs::create_dir_all(&new).unwrap();
+        std::fs::write(old.join("history.jsonl"), b"old").unwrap();
+        std::fs::write(old.join("extra.txt"), b"extra").unwrap();
+        std::fs::write(new.join("history.jsonl"), b"new").unwrap();
+
+        assert!(migrate_pair(&old, &new).unwrap().contains("1 skipped"));
+        assert_eq!(std::fs::read(new.join("history.jsonl")).unwrap(), b"new");
+        assert_eq!(std::fs::read(new.join("extra.txt")).unwrap(), b"extra");
+        assert_eq!(std::fs::read(old.join("history.jsonl")).unwrap(), b"old");
         std::fs::remove_dir_all(root).unwrap();
     }
 
